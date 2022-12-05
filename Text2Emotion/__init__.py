@@ -1,16 +1,13 @@
-import nltk
 from nltk.corpus import stopwords
 import re
 import emoji
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 
-nltk.download('stopwords')
-nltk.download('punkt')
-nltk.download('wordnet')
+stop_words = set(stopwords.words('english'))
 
 
-def removing_shortcuts(text):
+def removing_shortcuts(text: list[str]) -> list[str]:
     full_words = []
     shortcuts = {'u': 'you', 'y': 'why', 'r': 'are', 'doin': 'doing', 'hw': 'how', 'k': 'okay', 'm': 'am',
                  'b4': 'before',
@@ -37,14 +34,7 @@ def removing_shortcuts(text):
         if token in shortcuts.keys():
             token = shortcuts[token]
         full_words.append(token)
-    text = " ".join(full_words)
-    return text
-
-
-def removing_stopwords(text):
-    stop_words = set(stopwords.words('english'))
-    stop = [x.lower() for x in stop_words]
-    return [word for word in text if not word in stopwords.words()]
+    return full_words
 
 
 def lemmatization(words_big):
@@ -54,7 +44,7 @@ def lemmatization(words_big):
     return " ".join(stemmed_words)
 
 
-def removing_not(text):
+def removing_not(text: str) -> str:
     d = {'not sad': 'Happy', 'not bad': 'Happy', 'not boring': 'Happy', 'not wrong': 'Happy', 'not bored': 'Happy',
          'not jealous': 'Happy', 'not happy': 'Sad', 'not well': 'Sad', 'not suitable': 'Angry', 'not right': 'Angry',
          'not good': 'Sad', 'not excited': 'Angry', 'not funny ': 'Sad', 'not  kind': 'Sad', 'not proud': 'Angry',
@@ -115,17 +105,16 @@ def removing_not(text):
          'not volunteering': 'Angry', 'not wait': 'Angry', 'not waiting': 'Angry', 'not feel': 'Sad',
          'not feeling': 'Sad', "not able": "Sad", "not do": "Sad"}
 
-    f = re.findall("not\s\w+", text)
+    f: list = re.findall("not\s\w+", text)
     for i in f:
         try:
             text = text.replace(i, d[i])
         except:
             pass
-    text = text.lower()
     return text
 
 
-def removing_contradictions(text):
+def removing_contradictions(text: str) -> str:
     if text.count("n't"):
         text = text.replace("n't", " not")
     text = re.sub("ai\snot", "am not", text)
@@ -633,23 +622,19 @@ def emojis_extractor(text):
     return text.lower()
 
 
-def cleaning(text):
-    text = text.lower()
-    text = emojis_extractor(text)
-    text = re.sub(r'http\S+|www.\S+', '', text)
-    text = removing_contradictions(text)
-    text = removing_not(text)
-    text = text.split()
+def cleaning(text: str) -> str:
+    text: str = text.lower()
+    text: str = emojis_extractor(text)
+    text: str = re.sub(r'http\S+|www.\S+', '', text)
+    text: str = removing_contradictions(text)
+    text: str = removing_not(text)
+    text: list[str] = text.split()
     text = removing_shortcuts(text)
-    text = ' '.join([i for i in text.split() if not i.isdigit()])
-    text = word_tokenize(text)
-    words_alpha = removing_stopwords(text)
-    words_big = [word for word in words_alpha if len(word) > 2]
-    clean_text = lemmatization(words_big)
-    clean_text = clean_text.replace('   ', ' ')
-    clean_text = clean_text.replace('  ', ' ')
-    # print(clean_text)
-    return clean_text
+    #text = word_tokenize(text)
+    words_big: list[str] = [word for word in text if len(word) > 2 and word not in stop_words and not word.isdigit()]
+    clean_text: str = lemmatization(words_big)
+    clean_text: str = re.sub(r'/\s\s+/g', ' ', clean_text)
+    return clean_text.lower()
 
 
 def get_emotion(input):
